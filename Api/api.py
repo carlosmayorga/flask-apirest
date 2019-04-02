@@ -3,17 +3,19 @@ from flask import Flask
 from flask_restful import Resource, Api
 from flask_restful import reqparse
 from flaskext.mysql import MySQL
+from flask_cors import CORS
 
 mysql = MySQL()
 app = Flask(__name__)
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
 app.config['MYSQL_DATABASE_DB'] = 'madrid'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-app.config['MYSQL_DATABASE_PORT'] = 8889
+app.config['MYSQL_DATABASE_HOST'] = 'flask-db'
+app.config['MYSQL_DATABASE_PORT'] = 6000
 
 mysql.init_app(app)
 api = Api(app)
+cors = CORS(app, resources={"/madrid": {"origins": "*"}})
 
 class Orquestator(Resource):
     def post(self):
@@ -30,10 +32,10 @@ class Orquestator(Resource):
             cursor = conn.cursor()
             cursor.callproc('sp_md_create_player', parameters)
             conn.commit()
-            return {'api-says':'ok'}, 201
+            return {'says':'ok'}, 201
 
         except Exception as e:
-            return {'api-says': 'error'}, 500, {'Etag': str(e)}
+            return {'says': 'error'}, 500, {'Etag': str(e)}
 
     def get(self):
         try:
@@ -60,7 +62,7 @@ class Orquestator(Resource):
                 }
                 players.append(player)
 
-            return {'api-says':players}
+            return {'body': players}
 
         except Exception as e:
             return {'api-says': 'error'}, 404, {'Etag': str(e)}
